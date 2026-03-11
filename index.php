@@ -4,7 +4,7 @@
     Description : Home Page   
     Developed By: Rajat Kumar Swain
     Date Created: 30-10-2025
-    Last Updated: 11-03-2026
+    Last Updated: <?php echo date("d-m-Y"); ?>
     Note         : This page defines the Home of Geek Infotech.
 =======================================================-->
 <?php include_once("optimize.php"); ?> 
