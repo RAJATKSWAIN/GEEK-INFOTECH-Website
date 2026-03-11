@@ -31,14 +31,7 @@ jobs:
 
 
     # ======================================
-    # 3️⃣ SECURITY SCAN
-    # ======================================
-    - name: 🔐 Security Scan
-      uses: gitleaks/gitleaks-action@v2
-
-
-    # ======================================
-    # 4️⃣ DEPLOY TO INFINITYFREE
+    # 3️⃣ DEPLOY TO INFINITYFREE
     # ======================================
     - name: 📦 FTP Deploy
       uses: SamKirkland/FTP-Deploy-Action@v4.3.5
