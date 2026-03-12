@@ -3,11 +3,13 @@
  * GEEK-INFOTECH-SMS Session & Access Manager
  * Role-Based Access Control (RBAC) 
  */
-session_start();
+
+// Ensure session starts only if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 class Session {
-    // Dynamically manage the base path (adjust as needed for your server)
-    private static $base_path = "/geek_sms/";
 
     /**
      * Set session variables after successful login
@@ -16,7 +18,10 @@ class Session {
         $_SESSION['user_id']    = $user['USER_ID'];
         $_SESSION['username']   = $user['USERNAME'];
         $_SESSION['role']       = strtoupper($user['ROLE']);
-        $_SESSION['full_name']  = $user['FULL_NAME'] ?? $user['USERNAME']; // Fallback to username
+        
+        // Use DISPLAY_NAME prepared by AuthService, fallback to Username
+        $_SESSION['full_name']  = $user['DISPLAY_NAME'] ?? $user['USERNAME']; 
+        
         $_SESSION['staff_id']   = $user['STAFF_REF_ID'] ?? null;
         $_SESSION['student_id'] = $user['STUDENT_REF_ID'] ?? null;
         $_SESSION['login_time'] = time();
@@ -26,18 +31,17 @@ class Session {
     }
 
     /**
-     * ROUTING: Redirect user to their specific dashboard
+     * ROUTING: Redirect user to their specific dashboard using the universal url() helper
      */
     public static function redirectByRole($role) {
         $role = strtoupper($role);
-        $viewPath = self::$base_path . "views/";
 
         switch ($role) {
-            case 'ADMIN':     header("Location: {$viewPath}admin/dashboard.php"); break;
-            case 'COUNSELOR': header("Location: {$viewPath}counselor/dashboard.php"); break;
-            case 'FACULTY':   header("Location: {$viewPath}faculty/dashboard.php"); break;
-            case 'STUDENT':   header("Location: {$viewPath}student/dashboard.php"); break;
-            default:          header("Location: " . self::$base_path . "index.php?error=unauthorized");
+            case 'ADMIN':     header("Location: " . url('views/admin/dashboard.php')); break;
+            case 'COUNSELOR': header("Location: " . url('views/counselor/dashboard.php')); break;
+            case 'FACULTY':   header("Location: " . url('views/faculty/dashboard.php')); break;
+            case 'STUDENT':   header("Location: " . url('views/student/dashboard.php')); break;
+            default:          header("Location: " . url('index.php?error=unauthorized'));
         }
         exit();
     }
@@ -49,19 +53,19 @@ class Session {
     public static function protect($allowedRoles = []) {
         // 1. Check if logged in
         if (!isset($_SESSION['user_id'])) {
-            header("Location: " . self::$base_path . "index.php?error=login_required");
+            header("Location: " . url('index.php?error=login_required'));
             exit();
         }
 
         // 2. Check Role permissions
         if (!empty($allowedRoles) && !in_array($_SESSION['role'], $allowedRoles)) {
-            header("Location: " . self::$base_path . "views/unauthorized.php");
+            header("Location: " . url('views/unauthorized.php'));
             exit();
         }
     }
 
     /**
-     * Helper to check if a user is already logged in (use on index.php)
+     * Helper to check if a user is already logged in (used on index.php)
      */
     public static function checkLogin() {
         if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
@@ -69,6 +73,9 @@ class Session {
         }
     }
 
+    /**
+     * Secure Logout
+     */
     public static function destroy() {
         $_SESSION = []; // Clear array
         if (ini_get("session.use_cookies")) {
@@ -79,7 +86,7 @@ class Session {
             );
         }
         session_destroy();
-        header("Location: " . self::$base_path . "index.php?msg=logged_out");
+        header("Location: " . url('index.php?msg=logged_out'));
         exit();
     }
 }
