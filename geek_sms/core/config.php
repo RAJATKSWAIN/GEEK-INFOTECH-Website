@@ -1,12 +1,24 @@
 <?php
 /**
  * GEEK-INFOTECH-SMS-V1.0.0
- * Database Connection - PDO Singleton
+ * Universal System Configuration & Core Helpers
  * Localization: Asia/Kolkata
  */
 
+// 1. Force Indian Standard Time for all operations
+date_default_timezone_set('Asia/Kolkata');
+
+// 2. Global System Constants
+define('APP_NAME', 'GEEK-INFOTECH-AMS');
+define('APP_VERSION', '1.0.0');
+
+// Dynamic Base URL - Helps with redirects regardless of folder depth
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+define('BASE_URL', $protocol . $_SERVER['HTTP_HOST'] . "/geek_sms/");
+
+// 3. Database Singleton Class
 class Database {
-    private $host     = "sql100.infinityfree.com";
+    private $host     = "sql104.infinityfree.com";
     private $db_name  = "if0_40254012_geek_sms"; 
     private $username = "if0_40254012";
     private $password = "Geekinfo2025";
@@ -27,12 +39,13 @@ class Database {
 
             $this->conn = new PDO($dsn, $this->username, $this->password, $options);
             
-            // Force IST Timezone
+            // Sync Database Timezone with PHP
             $this->conn->exec("SET time_zone = '+05:30'");
 
         } catch (PDOException $e) {
-            // Log error in production; for now, we die for debugging
-            die("Connection Error: " . $e->getMessage());
+            // High-security error masking for production
+            error_log("Connection Error: " . $e->getMessage());
+            die("Critical Error: Authority Server Connection Failed.");
         }
     }
 
@@ -48,7 +61,22 @@ class Database {
     }
 }
 
-// Global helper function for Service layer
-function db() {
-    return Database::getInstance()->getConnection();
+/**
+ * 4. Global Helper Function: db()
+ * Usage: $stmt = db()->prepare("...");
+ */
+if (!function_exists('db')) {
+    function db() {
+        return Database::getInstance()->getConnection();
+    }
+}
+
+/**
+ * 5. Global Helper Function: url()
+ * Usage: header("Location: " . url('views/admin/dashboard.php'));
+ */
+if (!function_exists('url')) {
+    function url($path = '') {
+        return BASE_URL . ltrim($path, '/');
+    }
 }
