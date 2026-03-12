@@ -1,35 +1,57 @@
 <?php
 /**
- * GEEK-INFOTECH-SMS-V1.0.0
- * Universal System Configuration & Core Helpers
- * Localization: Asia/Kolkata
+ * GEEK-INFOTECH-AMS-V1.0.0
+ * Universal System Configuration
+ * CLASS: Global System Configuration
+ * PURPOSE: Manages Database, Pathing, Security, and Environment
  */
 
-// 1. Force Indian Standard Time for all operations
+// --- SECTION 1: SYSTEM LOCALIZATION ---
 date_default_timezone_set('Asia/Kolkata');
 
-// 2. Global System Constants
-define('APP_NAME', 'GEEK-INFOTECH-AMS');
-define('APP_VERSION', '1.0.0');
 
-// Dynamic Base URL - Helps with redirects regardless of folder depth
+// --- SECTION 2: ENVIRONMENT DETECTION ---
+// Automatically switches between Localhost and InfinityFree
+$is_local = ($_SERVER['REMOTE_ADDR'] == '127.0.0.1' || $_SERVER['HTTP_HOST'] == 'localhost');
+
+
+// --- SECTION 3: WEB & PHYSICAL PATHING ---
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
-define('BASE_URL', $protocol . $_SERVER['HTTP_HOST'] . "/geek_sms/");
+$domain   = $_SERVER['HTTP_HOST'];
 
-// 3. Database Singleton Class
+// The URL used by the browser (CSS/JS/Redirects)
+define('BASE_URL', $protocol . $domain . "/geek_sms/");
+
+// The Absolute Path used by PHP (require/include)
+define('SYS_ROOT', realpath(__DIR__ . '/..') . DIRECTORY_SEPARATOR);
+define('CORE_PATH', SYS_ROOT . 'core' . DIRECTORY_SEPARATOR);
+define('SERVICE_PATH', SYS_ROOT . 'services' . DIRECTORY_SEPARATOR);
+
+
+// --- SECTION 4: SECURITY CONSTANTS ---
+define('APP_NAME', 'GEEK-INFOTECH-AMS');
+define('APP_VERSION', '1.2.0');
+define('ENC_KEY', 'G33k_Inf0_Secure_2026_TRINY'); // For Security::encrypt()
+
+
+// --- SECTION 5: DATABASE SINGLETON ---
 class Database {
+    // PROPERTIES: Private credentials
     private $host     = "sql104.infinityfree.com";
     private $db_name  = "if0_40254012_geek_sms"; 
     private $username = "if0_40254012";
     private $password = "Geekinfo2025";
-    private $port     = "3306";
     
     public $conn;
     private static $instance;
 
+    /**
+     * PRIVATE FUNCTION: __construct
+     * Prevents multiple connections; runs once per page load.
+     */
     private function __construct() {
         try {
-            $dsn = "mysql:host=" . $this->host . ";port=" . $this->port . ";dbname=" . $this->db_name . ";charset=utf8mb4";
+            $dsn = "mysql:host=" . $this->host . ";dbname=" . $this->db_name . ";charset=utf8mb4";
             
             $options = [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -43,12 +65,16 @@ class Database {
             $this->conn->exec("SET time_zone = '+05:30'");
 
         } catch (PDOException $e) {
-            // High-security error masking for production
-            error_log("Connection Error: " . $e->getMessage());
+            // Mask technical details from the public
+            error_log("GEEK-AMS DB Error: " . $e->getMessage());
             die("Critical Error: Authority Server Connection Failed.");
         }
     }
 
+    /**
+     * PUBLIC FUNCTION: getInstance
+     * Returns the existing connection or creates a new one if empty.
+     */
     public static function getInstance() {
         if (!self::$instance) {
             self::$instance = new Database();
@@ -56,14 +82,21 @@ class Database {
         return self::$instance;
     }
 
+    /**
+     * PUBLIC FUNCTION: getConnection
+     * Returns the PDO object.
+     */
     public function getConnection() {
         return $this->conn;
     }
 }
 
+
+// --- SECTION 6: GLOBAL UTILITY HELPERS ---
+
 /**
- * 4. Global Helper Function: db()
- * Usage: $stmt = db()->prepare("...");
+ * HELPER: db()
+ * Access the database anywhere: $data = db()->query(...)
  */
 if (!function_exists('db')) {
     function db() {
@@ -72,8 +105,8 @@ if (!function_exists('db')) {
 }
 
 /**
- * 5. Global Helper Function: url()
- * Usage: header("Location: " . url('views/admin/dashboard.php'));
+ * HELPER: url()
+ * Generate absolute URLs: <a href="<?= url('index.php') ?>">
  */
 if (!function_exists('url')) {
     function url($path = '') {
