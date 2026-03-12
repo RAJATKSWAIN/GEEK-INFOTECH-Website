@@ -20,14 +20,22 @@ class Security {
     }
 
     /**
-     * Decrypt sensitive data
-     */
-    public static function decrypt($data) {
-        if (empty($data) || !strpos($data, '::')) return $data;
-        
-        list($encrypted_data, $iv) = explode('::', base64_decode($data), 2);
-        return openssl_decrypt($encrypted_data, self::$cipher, self::$encryption_key, 0, $iv);
-    }
+ * Decrypt sensitive data (Updated with IV length validation)
+ */
+public static function decrypt($data) {
+    if (empty($data)) return "";
+    
+    $decoded = base64_decode($data, true);
+    if (!$decoded || !strpos($decoded, '::')) return $data;
+
+    list($encrypted_data, $iv) = explode('::', $decoded, 2);
+    $iv_length = openssl_cipher_iv_length(self::$cipher);
+
+    // Validate IV length to prevent openssl errors
+    if (strlen($iv) !== $iv_length) return "Decryption Error: Invalid IV";
+
+    return openssl_decrypt($encrypted_data, self::$cipher, self::$encryption_key, 0, $iv);
+}
 
     /**
      * Global Sanitization to prevent XSS
