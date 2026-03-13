@@ -10,10 +10,10 @@ define('BASE_URL', $protocol . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/');
 define('SYS_ROOT', realpath(__DIR__ . '/..') . DIRECTORY_SEPARATOR);
 
 class Database {
-    private string $host = '127.0.0.1';
-    private string $db_name = 'giams_v120';
-    private string $username = 'root';
-    private string $password = '';
+    private string $host = 'sql104.infinityfree.com';
+    private string $db_name = 'if0_40254012_giams';
+    private string $username = 'if0_40254012';
+    private string $password = 'Geekinfo2025';
     private static ?Database $instance = null;
     private PDO $conn;
 
